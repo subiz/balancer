@@ -67,13 +67,54 @@ func TestBalance(t *testing.T) {
 			3: []int{5, 6},
 			4: []int{7, 8},
 		},
-		nodes: []int{1, 2, 3},
+		nodes: []int{1, 2, 3, 4, 5},
 		expected: map[int][]int{
 			1: []int{1, 2},
 			2: []int{3, 4},
 			3: []int{5, 6},
 			4: []int{7},
 			5: []int{8},
+		},
+	}, {
+		desc: "test 4, no change in cluster, just rebalance",
+		config: map[int][]int{
+			1: []int{1, 2},
+			2: []int{3, 4},
+			3: []int{5, 6},
+			4: []int{},
+		},
+		nodes: []int{1, 2, 3, 4},
+		expected: map[int][]int{
+			1: []int{1, 2},
+			2: []int{3, 4},
+			3: []int{5},
+			4: []int{6},
+		},
+	}, {
+		desc: "unbalanced remove node",
+		config: map[int][]int{
+			1: []int{1, 2, 3, 4, 5, 9},
+			2: []int{6},
+			3: []int{7, 8},
+			4: []int{},
+		},
+		nodes: []int{1, 3, 4},
+		expected: map[int][]int{
+			1: []int{1, 2, 3},
+			3: []int{7, 8, 4},
+			4: []int{5, 9},
+		},
+	},  {
+		desc: "unbalanced add node",
+		config: map[int][]int{
+			1: []int{1, 2, 3, 4, 5, 6, 9},
+			3: []int{7, 8},
+		},
+		nodes: []int{1, 2, 3},
+		expected: map[int][]int{
+			1: []int{1, 2, 3},
+			2: []int{4, 5, 6},
+			3: []int{7, 8, 9},
 		},
 	}}
 
