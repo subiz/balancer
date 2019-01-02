@@ -1,7 +1,6 @@
 package main
 
 import (
-	"sort"
 	"testing"
 )
 
@@ -9,9 +8,6 @@ func compareIntArr(a1, a2 []int) bool {
 	if len(a1) != len(a2) {
 		return false
 	}
-
-	sort.Ints(a1)
-	sort.Ints(a2)
 
 	for i := range a1 {
 		if a1[i] != a2[i] {
@@ -101,10 +97,10 @@ func TestBalance(t *testing.T) {
 		nodes: []int{1, 3, 4},
 		expected: map[int][]int{
 			1: []int{1, 2, 3},
-			3: []int{7, 8, 4},
-			4: []int{5, 9},
+			3: []int{7, 8, 9},
+			4: []int{6, 4, 5},
 		},
-	},  {
+	}, {
 		desc: "unbalanced add node",
 		config: map[int][]int{
 			1: []int{1, 2, 3, 4, 5, 6, 9},
