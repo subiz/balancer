@@ -31,32 +31,25 @@ func main() {
 func rebalanceJobs(board map[int][]int, nextNodes []int) map[int][]int {
 	totalJobs := 0
 	curNodes := make(map[int]int, 0)
+	delNodes := make(map[int]int, 0)
+	newNodes := make([]int, 0)
+	reassignJobs := make([]int, 0)
+
+	// keyNodes use to sort nodes
 	keyNodes := make([]int, 0)
 
 	for node, jobs := range board {
-		totalJobs = totalJobs + len(jobs)
-		curNodes[node] = node
-	}
+		totalJobs += len(jobs)
 
-	jobNeedReAssign := make([]int, 0)
-	for _, node := range curNodes {
-		existed := false
-		for _, n := range nextNodes {
-			if node == n {
-				existed = true
-				break
-			}
-		}
-		if !existed {
-			jobNeedReAssign = append(jobNeedReAssign, board[node]...)
-			delete(board, node)
-			delete(curNodes, node)
-		} else {
+		if in := inSlice(nextNodes, node); in {
 			keyNodes = append(keyNodes, node)
+			curNodes[node] = node
+		} else {
+			reassignJobs = append(reassignJobs, jobs...)
+			delNodes[node] = node
 		}
 	}
 
-	newNodes := make([]int, 0)
 	for _, node := range nextNodes {
 		if _, ok := curNodes[node]; !ok {
 			newNodes = append(newNodes, node)
@@ -65,55 +58,73 @@ func rebalanceJobs(board map[int][]int, nextNodes []int) map[int][]int {
 
 	totalNodes := len(curNodes) + len(newNodes)
 	min := int(math.Floor(float64(totalJobs) / float64(totalNodes)))
-
-	// reduce job of prior last node
 	rem := totalJobs % totalNodes
+
 	sort.Sort(sort.IntSlice(keyNodes))
+
+	// reduce job of last node
+	orem := rem
 	for _, node := range keyNodes {
 		jobs := board[node]
 		l := len(jobs)
-		if l > min && rem >= 0 {
-			if rem > 0 {
-				rem--
-			} else if rem == 0 {
-				jobNeedReAssign = append(jobNeedReAssign, jobs[min:]...)
+		if l > min && orem >= 0 {
+			if orem > 0 {
+				orem--
+			} else if orem == 0 {
+				reassignJobs = append(reassignJobs, jobs[min:]...)
 				newJobs := removeElements(jobs, min, l)
 				board[node] = newJobs
 			}
 		}
 	}
 
-	// add job to current empty node
 	for node, jobs := range board {
+		// del node
+		if _, ok := delNodes[node]; ok {
+			delete(board, node)
+			continue
+		}
+		// add job to node empty
 		if len(jobs) == 0 {
-			board[node] = append(board[node], jobNeedReAssign[0:min]...)
-			jobNeedReAssign = removeElements(jobNeedReAssign, 0, min)
+			board[node] = append(board[node], reassignJobs[0:min]...)
+			reassignJobs = removeElements(reassignJobs, 0, min)
 		}
 	}
 
 	// add job to new node
-	rem = totalJobs % totalNodes
 	for i := 0; i < len(newNodes); i++ {
-		board[newNodes[i]] = append(board[newNodes[i]], jobNeedReAssign[0:min]...)
-		jobNeedReAssign = removeElements(jobNeedReAssign, 0, min)
+		board[newNodes[i]] = append(board[newNodes[i]], reassignJobs[0:min]...)
+		reassignJobs = removeElements(reassignJobs, 0, min)
 	}
 
 	// add job to current node
-	rem = totalJobs % totalNodes
-	sort.Sort(sort.IntSlice(keyNodes))
+	nrem := rem
 	for _, node := range keyNodes {
 		jobs := board[node]
-		if len(jobs) == min && len(jobNeedReAssign) > 0 && rem > 0 {
-			board[node] = append(board[node], jobNeedReAssign[0])
-			jobNeedReAssign = removeElements(jobNeedReAssign, 0, 1)
-			rem--
-		} else if len(jobs) < min && len(jobNeedReAssign) > 0 {
-			board[node] = append(board[node], jobNeedReAssign[0])
-			jobNeedReAssign = removeElements(jobNeedReAssign, 0, 1)
+		addMoreOne := false
+		if len(jobs) == min && len(reassignJobs) > 0 && nrem > 0 {
+			addMoreOne = true
+			nrem--
+		} else if len(jobs) < min && len(reassignJobs) > 0 {
+			addMoreOne = true
+		}
+
+		if addMoreOne {
+			board[node] = append(board[node], reassignJobs[0])
+			reassignJobs = removeElements(reassignJobs, 0, 1)
 		}
 	}
 
 	return board
+}
+
+func inSlice(m []int, k int) bool {
+	for _, j := range m {
+		if j == k {
+			return true
+		}
+	}
+	return false
 }
 
 func removeElements(s []int, from int, to int) []int {
