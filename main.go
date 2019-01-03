@@ -13,16 +13,16 @@ func main() {
 	max := int(math.Ceil(float64(len(jobs)) / float64(len(curNodes))))
 	rem := len(jobs) % len(curNodes)
 	cur := 0
-	for i := 0; i < len(curNodes); i++ {
+	for i, node := range curNodes {
 		next := cur + max
 		if i > rem-1 {
 			next = next - 1
 		}
-		board[curNodes[i]] = jobs[cur:next]
+		board[node] = jobs[cur:next]
 		cur = next
 	}
 
-	nextNodes := []int{1, 2, 3, 5, 8}
+	nextNodes := []int{1, 2, 3, 5, 6}
 	fmt.Println("current", curNodes, board)
 	m := rebalanceJobs(board, nextNodes)
 	fmt.Println("next", nextNodes, m)
@@ -97,19 +97,19 @@ func rebalanceJobs(board map[int][]int, nextNodes []int) map[int][]int {
 		reassignJobs = removeElements(reassignJobs, 0, min)
 	}
 
-	// add job to current node
+	// add more job to current node
 	nrem := rem
 	for _, node := range keyNodes {
 		jobs := board[node]
-		addMoreOne := false
+		addMore := false
 		if len(jobs) == min && len(reassignJobs) > 0 && nrem > 0 {
-			addMoreOne = true
+			addMore = true
 			nrem--
 		} else if len(jobs) < min && len(reassignJobs) > 0 {
-			addMoreOne = true
+			addMore = true
 		}
 
-		if addMoreOne {
+		if addMore {
 			board[node] = append(board[node], reassignJobs[0])
 			reassignJobs = removeElements(reassignJobs, 0, 1)
 		}
